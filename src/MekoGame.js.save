@@ -47,6 +47,15 @@ const MekoGame = () => {
     };
 
     let platforms = [];
+
+    // Add a starting platform at the bottom center
+    platforms.push({
+      x: canvas.width / 2 - 40,
+      y: canvas.height - 50,
+      width: 80,
+      height: 10,
+    });
+
     for (let i = 0; i < 10; i++) {
       platforms.push({
         x: Math.random() * (canvas.width - 80),
@@ -174,4 +183,3 @@ const MekoGame = () => {
 };
 
 export default MekoGame;
-
