@@ -9,6 +9,7 @@ const MekoGame = () => {
   const [finalScore, setFinalScore] = useState(0);
   const keys = useRef({});
   const gameState = useRef({});
+  const growthTimer = useRef(null);
 
   useEffect(() => {
     if (!started || gameOver) return;
@@ -29,13 +30,15 @@ const MekoGame = () => {
 
     const resetGameState = () => {
       const meko = {
-        x: canvas.width / 2 - 30,
-        y: canvas.height - 150,
-        width: 60,
-        height: 60,
+        x: canvas.width / 2 - 40,
+        y: canvas.height - 250,
+        width: 80,
+        height: 80,
         velocityY: 0,
         jumpForce: 15,
         speed: 5,
+        growth: 1,
+        originalSize: 80,
       };
 
       const egg = {
@@ -48,23 +51,32 @@ const MekoGame = () => {
 
       const generatePlatforms = () => {
         const platforms = [];
-        platforms.push({
-          x: canvas.width / 2 - 40,
-          y: canvas.height - 50,
-          width: 80,
-          height: 10,
-          dx: 0,
-        });
-        for (let i = 1; i < 12; i++) {
-          const move = Math.random() < 0.4 ? 1.5 : 0; // some platforms move
-          platforms.push({
-            x: Math.random() * (canvas.width - 80),
-            y: canvas.height - i * 70,
-            width: 80,
-            height: 10,
-            dx: move,
-          });
+        const spacing = 70;
+        let y = canvas.height - 50;
+
+        const pattern = [
+          { type: "solid", count: 1 },
+          { type: "moving", count: 1 },
+          { type: "solid", count: 2 },
+          { type: "moving", count: 1 },
+          { type: "solid", count: 1 },
+          { type: "moving", count: 2 },
+          { type: "solid", count: 2 },
+        ];
+
+        while (y > -3000) {
+          for (let group of pattern) {
+            for (let i = 0; i < group.count; i++) {
+              const width = 100;
+              const height = 12;
+              const x = Math.random() * (canvas.width - width);
+              const dx = group.type === "moving" ? 2.5 : 0;
+              platforms.push({ x, y, width, height, dx });
+              y -= spacing;
+            }
+          }
         }
+
         return platforms;
       };
 
@@ -80,12 +92,15 @@ const MekoGame = () => {
     const resetGame = () => {
       setGameOver(true);
       setFinalScore(gameState.current.score);
+      clearTimeout(growthTimer.current);
     };
 
     const respawnEgg = () => {
       const state = gameState.current;
+      const verticalStep = 500;
+      const newY = state.scrollOffset + verticalStep + Math.random() * 100;
       state.egg.x = Math.random() * (canvas.width - state.egg.width);
-      state.egg.y -= 600;
+      state.egg.y = canvas.height - newY;
       state.egg.collected = false;
     };
 
@@ -107,16 +122,22 @@ const MekoGame = () => {
         egg.y += diff;
       }
 
-      if (meko.y > canvas.height) {
+      if (meko.y > canvas.height + 100) {
         resetGame();
         return;
       }
 
       if (keys.current["ArrowLeft"]) meko.x -= meko.speed;
       if (keys.current["ArrowRight"]) meko.x += meko.speed;
-      meko.x = Math.max(0, Math.min(canvas.width - meko.width, meko.x));
+      meko.x = Math.max(0, Math.min(canvas.width - meko.width * meko.growth, meko.x));
 
-      ctx.drawImage(mekoImg, meko.x, meko.y, meko.width, meko.height);
+      ctx.drawImage(
+        mekoImg,
+        meko.x,
+        meko.y,
+        meko.width * meko.growth,
+        meko.height * meko.growth
+      );
 
       platforms.forEach((p) => {
         if (p.dx) {
@@ -128,9 +149,9 @@ const MekoGame = () => {
         ctx.fillRect(p.x, p.y, p.width, p.height);
 
         if (
-          meko.y + meko.height >= p.y &&
-          meko.y + meko.height <= p.y + 10 &&
-          meko.x + meko.width > p.x &&
+          meko.y + meko.height * meko.growth >= p.y &&
+          meko.y + meko.height * meko.growth <= p.y + 12 &&
+          meko.x + meko.width * meko.growth > p.x &&
           meko.x < p.x + p.width &&
           meko.velocityY > 0
         ) {
@@ -143,13 +164,19 @@ const MekoGame = () => {
         ctx.drawImage(eggImg, egg.x, egg.y, egg.width, egg.height);
         if (
           meko.x < egg.x + egg.width &&
-          meko.x + meko.width > egg.x &&
+          meko.x + meko.width * meko.growth > egg.x &&
           meko.y < egg.y + egg.height &&
-          meko.y + meko.height > egg.y
+          meko.y + meko.height * meko.growth > egg.y
         ) {
           egg.collected = true;
+          meko.growth += 0.3;
           state.score += 10;
           respawnEgg();
+
+          clearTimeout(growthTimer.current);
+          growthTimer.current = setTimeout(() => {
+            meko.growth = 1;
+          }, 10000);
         }
       }
 
@@ -184,6 +211,7 @@ const MekoGame = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
+      clearTimeout(growthTimer.current);
     };
   }, [started, gameOver]);
 

@@ -31,7 +31,7 @@ const MekoGame = () => {
     const resetGameState = () => {
       const meko = {
         x: canvas.width / 2 - 40,
-        y: canvas.height - 150,
+        y: canvas.height - 250,
         width: 80,
         height: 80,
         velocityY: 0,
@@ -51,7 +51,7 @@ const MekoGame = () => {
 
       const generatePlatforms = () => {
         const platforms = [];
-        const spacing = 80;
+        const spacing = 70;
         let y = canvas.height - 50;
 
         const pattern = [
@@ -70,7 +70,7 @@ const MekoGame = () => {
               const width = 100;
               const height = 12;
               const x = Math.random() * (canvas.width - width);
-              const dx = group.type === "moving" ? 1.5 : 0;
+              const dx = group.type === "moving" ? 2.5 : 0;
               platforms.push({ x, y, width, height, dx });
               y -= spacing;
             }
