@@ -1,4 +1,4 @@
-// A vertical jumping version of Meko Game with bunny chase and upward egg collecting
+// A vertical jumping version of Meko Game with upward egg collecting
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -23,8 +23,6 @@ const MekoGame = () => {
     eggImg.src = process.env.PUBLIC_URL + "/egg.png";
     const bgImg = new Image();
     bgImg.src = process.env.PUBLIC_URL + "/background.png";
-    const rabbitImg = new Image();
-    rabbitImg.src = process.env.PUBLIC_URL + "/rabbit.png";
 
     const gravity = 0.6;
     let scrollOffset = 0;
@@ -46,14 +44,6 @@ const MekoGame = () => {
       width: 40,
       height: 50,
       collected: false,
-    };
-
-    const rabbit = {
-      x: canvas.width / 2 - 40,
-      y: canvas.height - 80,
-      width: 60,
-      height: 60,
-      speed: 1.2,
     };
 
     let platforms = [];
@@ -82,19 +72,6 @@ const MekoGame = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-      // Bunny logic
-      if (rabbit.y < meko.y) rabbit.y += rabbit.speed;
-      ctx.drawImage(rabbitImg, rabbit.x, rabbit.y, rabbit.width, rabbit.height);
-      if (
-        meko.x < rabbit.x + rabbit.width &&
-        meko.x + meko.width > rabbit.x &&
-        meko.y < rabbit.y + rabbit.height &&
-        meko.y + meko.height > rabbit.y
-      ) {
-        resetGame();
-        return;
-      }
-
       // Meko physics
       meko.velocityY += gravity;
       meko.y += meko.velocityY;
@@ -105,7 +82,6 @@ const MekoGame = () => {
         meko.y = canvas.height / 2;
         platforms.forEach((p) => (p.y += diff));
         egg.y += diff;
-        rabbit.y += diff;
       }
 
       if (keys.current["ArrowLeft"]) meko.x -= meko.speed;
@@ -160,7 +136,7 @@ const MekoGame = () => {
     let imagesLoaded = 0;
     const tryStart = () => {
       imagesLoaded++;
-      if (imagesLoaded === 4) {
+      if (imagesLoaded === 3) {
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
         update();
@@ -170,7 +146,6 @@ const MekoGame = () => {
     mekoImg.onload = tryStart;
     eggImg.onload = tryStart;
     bgImg.onload = tryStart;
-    rabbitImg.onload = tryStart;
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
