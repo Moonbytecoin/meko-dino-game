@@ -39,6 +39,7 @@ const MekoGame = () => {
         speed: 5,
         growth: 1,
         originalSize: 110,
+        lastPlatformY: null,
       };
 
       const egg = {
@@ -80,7 +81,7 @@ const MekoGame = () => {
               const width = 100;
               const height = 12;
               const x = Math.random() * (canvas.width - width);
-              const dx = group.type === "moving" ? 4.5 : 0;
+              const dx = group.type === "moving" ? 5.5 : 0;
               platforms.push({ x, y, width, height, dx });
               y -= spacing;
             }
@@ -167,6 +168,7 @@ const MekoGame = () => {
         ) {
           meko.velocityY = -meko.jumpForce;
           jumpSound.play();
+          state.score += 1;
         }
       });
 
