@@ -36,6 +36,7 @@ const MekoGame = () => {
         velocityY: 0,
         jumpForce: 15,
         speed: 5,
+        growth: 1,
       };
 
       const egg = {
@@ -56,7 +57,7 @@ const MekoGame = () => {
           dx: 0,
         });
         for (let i = 1; i < 12; i++) {
-          const move = Math.random() < 0.4 ? 1.5 : 0; // some platforms move
+          const move = Math.random() < 0.4 ? 1.5 : 0;
           platforms.push({
             x: Math.random() * (canvas.width - 80),
             y: canvas.height - i * 70,
@@ -84,8 +85,10 @@ const MekoGame = () => {
 
     const respawnEgg = () => {
       const state = gameState.current;
+      const verticalStep = 500;
+      const newY = state.scrollOffset + verticalStep + Math.random() * 100;
       state.egg.x = Math.random() * (canvas.width - state.egg.width);
-      state.egg.y -= 600;
+      state.egg.y = canvas.height - newY;
       state.egg.collected = false;
     };
 
@@ -116,7 +119,13 @@ const MekoGame = () => {
       if (keys.current["ArrowRight"]) meko.x += meko.speed;
       meko.x = Math.max(0, Math.min(canvas.width - meko.width, meko.x));
 
-      ctx.drawImage(mekoImg, meko.x, meko.y, meko.width, meko.height);
+      ctx.drawImage(
+        mekoImg,
+        meko.x,
+        meko.y,
+        meko.width * meko.growth,
+        meko.height * meko.growth
+      );
 
       platforms.forEach((p) => {
         if (p.dx) {
@@ -128,9 +137,9 @@ const MekoGame = () => {
         ctx.fillRect(p.x, p.y, p.width, p.height);
 
         if (
-          meko.y + meko.height >= p.y &&
-          meko.y + meko.height <= p.y + 10 &&
-          meko.x + meko.width > p.x &&
+          meko.y + meko.height * meko.growth >= p.y &&
+          meko.y + meko.height * meko.growth <= p.y + 10 &&
+          meko.x + meko.width * meko.growth > p.x &&
           meko.x < p.x + p.width &&
           meko.velocityY > 0
         ) {
@@ -143,11 +152,12 @@ const MekoGame = () => {
         ctx.drawImage(eggImg, egg.x, egg.y, egg.width, egg.height);
         if (
           meko.x < egg.x + egg.width &&
-          meko.x + meko.width > egg.x &&
+          meko.x + meko.width * meko.growth > egg.x &&
           meko.y < egg.y + egg.height &&
-          meko.y + meko.height > egg.y
+          meko.y + meko.height * meko.growth > egg.y
         ) {
           egg.collected = true;
+          meko.growth += 0.2;
           state.score += 10;
           respawnEgg();
         }
@@ -210,3 +220,4 @@ const MekoGame = () => {
 };
 
 export default MekoGame;
+
