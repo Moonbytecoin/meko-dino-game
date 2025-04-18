@@ -1,4 +1,4 @@
-// A vertical jumping version of Meko Game with upward egg collecting
+// A vertical jumping version of Meko Game with upward egg collecting and improved platform logic
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -8,6 +8,7 @@ const MekoGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const keys = useRef({});
+  const gameState = useRef({});
 
   useEffect(() => {
     if (!started || gameOver) return;
@@ -25,72 +26,90 @@ const MekoGame = () => {
     bgImg.src = process.env.PUBLIC_URL + "/background.png";
 
     const gravity = 0.6;
-    let scrollOffset = 0;
-    let score = 0;
 
-    const meko = {
-      x: canvas.width / 2 - 30,
-      y: canvas.height - 150,
-      width: 60,
-      height: 60,
-      velocityY: 0,
-      jumpForce: 15,
-      speed: 5,
+    const resetGameState = () => {
+      const meko = {
+        x: canvas.width / 2 - 30,
+        y: canvas.height - 150,
+        width: 60,
+        height: 60,
+        velocityY: 0,
+        jumpForce: 15,
+        speed: 5,
+      };
+
+      const egg = {
+        x: Math.random() * (canvas.width - 50),
+        y: canvas.height - 800,
+        width: 40,
+        height: 50,
+        collected: false,
+      };
+
+      const generatePlatforms = () => {
+        const platforms = [];
+        platforms.push({
+          x: canvas.width / 2 - 40,
+          y: canvas.height - 50,
+          width: 80,
+          height: 10,
+          dx: 0,
+        });
+        for (let i = 1; i < 12; i++) {
+          const move = Math.random() < 0.4 ? 1.5 : 0; // some platforms move
+          platforms.push({
+            x: Math.random() * (canvas.width - 80),
+            y: canvas.height - i * 70,
+            width: 80,
+            height: 10,
+            dx: move,
+          });
+        }
+        return platforms;
+      };
+
+      gameState.current = {
+        meko,
+        egg,
+        platforms: generatePlatforms(),
+        score: 0,
+        scrollOffset: 0,
+      };
     };
-
-    const egg = {
-      x: Math.random() * (canvas.width - 50),
-      y: canvas.height - 800,
-      width: 40,
-      height: 50,
-      collected: false,
-    };
-
-    let platforms = [];
-
-    // Add a starting platform at the bottom center
-    platforms.push({
-      x: canvas.width / 2 - 40,
-      y: canvas.height - 50,
-      width: 80,
-      height: 10,
-    });
-
-    for (let i = 0; i < 10; i++) {
-      platforms.push({
-        x: Math.random() * (canvas.width - 80),
-        y: canvas.height - i * 100,
-        width: 80,
-        height: 10,
-      });
-    }
 
     const resetGame = () => {
       setGameOver(true);
-      setFinalScore(score);
+      setFinalScore(gameState.current.score);
     };
 
     const respawnEgg = () => {
-      egg.x = Math.random() * (canvas.width - egg.width);
-      egg.y -= 600;
-      egg.collected = false;
+      const state = gameState.current;
+      state.egg.x = Math.random() * (canvas.width - state.egg.width);
+      state.egg.y -= 600;
+      state.egg.collected = false;
     };
 
     const update = () => {
       if (gameOver) return;
+      const state = gameState.current;
+      const { meko, egg, platforms } = state;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-      // Meko physics
       meko.velocityY += gravity;
       meko.y += meko.velocityY;
 
       if (meko.y < canvas.height / 2) {
         const diff = canvas.height / 2 - meko.y;
-        scrollOffset += diff;
+        state.scrollOffset += diff;
         meko.y = canvas.height / 2;
         platforms.forEach((p) => (p.y += diff));
         egg.y += diff;
+      }
+
+      if (meko.y > canvas.height) {
+        resetGame();
+        return;
       }
 
       if (keys.current["ArrowLeft"]) meko.x -= meko.speed;
@@ -100,6 +119,11 @@ const MekoGame = () => {
       ctx.drawImage(mekoImg, meko.x, meko.y, meko.width, meko.height);
 
       platforms.forEach((p) => {
+        if (p.dx) {
+          p.x += p.dx;
+          if (p.x < 0 || p.x + p.width > canvas.width) p.dx *= -1;
+        }
+
         ctx.fillStyle = "#444";
         ctx.fillRect(p.x, p.y, p.width, p.height);
 
@@ -124,14 +148,14 @@ const MekoGame = () => {
           meko.y + meko.height > egg.y
         ) {
           egg.collected = true;
-          score += 10;
+          state.score += 10;
           respawnEgg();
         }
       }
 
       ctx.fillStyle = "black";
       ctx.font = "20px Arial";
-      ctx.fillText("Score: " + score, 20, 30);
+      ctx.fillText("Score: " + state.score, 20, 30);
       requestAnimationFrame(update);
     };
 
@@ -146,6 +170,7 @@ const MekoGame = () => {
     const tryStart = () => {
       imagesLoaded++;
       if (imagesLoaded === 3) {
+        resetGameState();
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
         update();
@@ -173,7 +198,9 @@ const MekoGame = () => {
         <div style={{ position: "absolute", width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", background: "#fff", zIndex: 10 }}>
           <h2>Game Over</h2>
           <p>Final Score: {finalScore}</p>
-          <button onClick={() => { setGameOver(false); setStarted(false); }}>Restart</button>
+          <button onClick={() => { setGameOver(false); setStarted(true); }}>
+            Restart
+          </button>
         </div>
       ) : (
         <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", backgroundColor: "#eef" }} />
