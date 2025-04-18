@@ -1,10 +1,11 @@
-// A basic Mario-style Meko Dino Game (clean, secret-free version)
+// A refined Meko Dino Game with better collisions, smoother blocks, and reliable music
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
   const jumpSound = new Audio("https://www.myinstants.com/media/sounds/jump-sound.mp3");
-  const music = new Audio("https://assets.mixkit.co/music/preview/mixkit-arcade-game-loop-251.mp3");
+  const music = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_1f7e1a41b8.mp3");
   music.loop = true;
+
   const canvasRef = useRef(null);
   const [started, setStarted] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(false);
@@ -14,14 +15,10 @@ const MekoGame = () => {
 
   useEffect(() => {
     if (!started || gameOver) return;
-
     if (musicEnabled) music.play();
 
     const canvas = canvasRef.current;
-    if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -34,9 +31,9 @@ const MekoGame = () => {
 
     const meko = {
       x: canvas.width * 0.1,
-      y: canvas.height - 140,
-      width: 120,
-      height: 120,
+      y: canvas.height - 120,
+      width: 100,
+      height: 100,
       velocityY: 0,
       jumpForce: 14,
       speed: 6,
@@ -46,8 +43,8 @@ const MekoGame = () => {
     const gravity = 0.6;
     let score = 0;
     let egg = {
-      x: canvas.width * 0.7,
-      y: canvas.height - 120,
+      x: canvas.width * 0.8,
+      y: canvas.height - 130,
       width: 50,
       height: 60,
       collected: false,
@@ -57,18 +54,19 @@ const MekoGame = () => {
     let obstacleInterval;
 
     const spawnObstacle = () => {
-      const size = 30 + Math.random() * 40;
-      const speed = 5 + Math.random() * 2;
-      const moveDirY = Math.random() > 0.5 ? 1 : -1;
-      const vertical = Math.random() > 0.5;
+      const size = 40;
+      const speed = 6 + Math.random() * 2;
+      const dirY = Math.random() > 0.5 ? 1 : -1;
+      const baseY = canvas.height - size - 50;
+      const vertical = Math.random() > 0.3;
       obstacles.push({
         x: canvas.width + size,
-        y: canvas.height - size - 50,
+        y: baseY,
         width: size,
         height: size,
         speed,
-        dirY: vertical ? moveDirY : 0,
-        baseY: canvas.height - size - 50,
+        dirY: vertical ? dirY : 0,
+        baseY,
       });
     };
 
@@ -86,7 +84,6 @@ const MekoGame = () => {
 
       if (!meko.grounded) meko.velocityY += gravity;
       meko.y += meko.velocityY;
-
       if (meko.y >= canvas.height - meko.height - 50) {
         meko.y = canvas.height - meko.height - 50;
         meko.velocityY = 0;
@@ -95,8 +92,7 @@ const MekoGame = () => {
 
       if (keys.current["ArrowRight"]) meko.x += meko.speed;
       if (keys.current["ArrowLeft"]) meko.x -= meko.speed;
-      if (meko.x < 0) meko.x = 0;
-      if (meko.x + meko.width > canvas.width) meko.x = canvas.width - meko.width;
+      meko.x = Math.max(0, Math.min(canvas.width - meko.width, meko.x));
 
       ctx.drawImage(mekoImg, meko.x, meko.y, meko.width, meko.height);
 
@@ -110,10 +106,10 @@ const MekoGame = () => {
         ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
 
         if (
-          meko.x < ob.x + ob.width &&
-          meko.x + meko.width > ob.x &&
-          meko.y < ob.y + ob.height &&
-          meko.y + meko.height > ob.y
+          meko.x < ob.x + ob.width - 10 &&
+          meko.x + meko.width > ob.x + 10 &&
+          meko.y < ob.y + ob.height - 10 &&
+          meko.y + meko.height > ob.y + 10
         ) {
           resetGame();
           return;
@@ -130,8 +126,8 @@ const MekoGame = () => {
         ) {
           egg.collected = true;
           score += 10;
-          meko.width *= 1.2;
-          meko.height *= 1.2;
+          meko.width *= 1.3;
+          meko.height *= 1.3;
         }
       }
 
@@ -163,7 +159,7 @@ const MekoGame = () => {
       if (imagesLoaded === 3) {
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
-        obstacleInterval = setInterval(spawnObstacle, 1500);
+        obstacleInterval = setInterval(spawnObstacle, 2000);
         update();
       }
     };
