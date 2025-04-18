@@ -54,6 +54,15 @@ const MekoGame = () => {
         const spacing = 70;
         let y = canvas.height - 50;
 
+        // Base platform at bottom center
+        platforms.push({
+          x: canvas.width / 2 - 50,
+          y: canvas.height - 60,
+          width: 100,
+          height: 12,
+          dx: 0
+        });
+
         const pattern = [
           { type: "solid", count: 1 },
           { type: "moving", count: 1 },
@@ -63,6 +72,8 @@ const MekoGame = () => {
           { type: "moving", count: 2 },
           { type: "solid", count: 2 },
         ];
+
+        y -= spacing;
 
         while (y > -3000) {
           for (let group of pattern) {
