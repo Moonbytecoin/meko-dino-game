@@ -7,6 +7,7 @@ const MekoGame = () => {
   music.loop = true;
   const canvasRef = useRef(null);
   const [started, setStarted] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const keys = useRef({});
@@ -14,7 +15,7 @@ const MekoGame = () => {
   useEffect(() => {
     if (!started || gameOver) return;
 
-    music.play();
+    if (musicEnabled) music.play();
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -34,11 +35,11 @@ const MekoGame = () => {
     const meko = {
       x: canvas.width * 0.1,
       y: canvas.height - 140,
-      width: 100,
-      height: 100,
+      width: 120,
+      height: 120,
       velocityY: 0,
       jumpForce: 14,
-      speed: 5,
+      speed: 6,
       grounded: true,
     };
 
@@ -57,15 +58,16 @@ const MekoGame = () => {
 
     const spawnObstacle = () => {
       const size = 30 + Math.random() * 40;
-      const speed = 3 + Math.random() * 2;
-      const moveDir = Math.random() > 0.5 ? 1 : -1;
+      const speed = 5 + Math.random() * 2;
+      const moveDirY = Math.random() > 0.5 ? 1 : -1;
+      const vertical = Math.random() > 0.5;
       obstacles.push({
         x: canvas.width + size,
         y: canvas.height - size - 50,
         width: size,
         height: size,
         speed,
-        dirY: Math.random() > 0.5 ? moveDir : 0,
+        dirY: vertical ? moveDirY : 0,
         baseY: canvas.height - size - 50,
       });
     };
@@ -82,11 +84,9 @@ const MekoGame = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-      // Gravity
       if (!meko.grounded) meko.velocityY += gravity;
       meko.y += meko.velocityY;
 
-      // Floor
       if (meko.y >= canvas.height - meko.height - 50) {
         meko.y = canvas.height - meko.height - 50;
         meko.velocityY = 0;
@@ -120,7 +120,6 @@ const MekoGame = () => {
         }
       }
 
-      // Egg power-up
       if (!egg.collected) {
         ctx.drawImage(eggImg, egg.x, egg.y, egg.width, egg.height);
         if (
@@ -136,7 +135,6 @@ const MekoGame = () => {
         }
       }
 
-      // Score
       frameCount++;
       if (frameCount % 60 === 0) score++;
       ctx.fillStyle = "black";
@@ -165,7 +163,7 @@ const MekoGame = () => {
       if (imagesLoaded === 3) {
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
-        obstacleInterval = setInterval(spawnObstacle, 2000);
+        obstacleInterval = setInterval(spawnObstacle, 1500);
         update();
       }
     };
@@ -181,20 +179,21 @@ const MekoGame = () => {
       music.pause();
       music.currentTime = 0;
     };
-  }, [started, gameOver]);
+  }, [started, gameOver, musicEnabled]);
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
       {!started ? (
         <div style={{ position: "absolute", width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", background: "#fff", zIndex: 10 }}>
-          <img src={process.env.PUBLIC_URL + "/meko.png"} alt="Start Meko" style={{ width: 100, height: 100, marginBottom: 20 }} />
-          <button onClick={() => setStarted(true)} style={{ padding: "12px 24px", fontSize: "1.2rem" }}>Start Game</button>
+          <img src={process.env.PUBLIC_URL + "/meko.png"} alt="Start Meko" style={{ width: 120, height: 120, marginBottom: 20 }} />
+          <button onClick={() => setStarted(true)} style={{ padding: "12px 24px", fontSize: "1.2rem", marginBottom: 10 }}>Start Game</button>
+          <button onClick={() => setMusicEnabled(true)} style={{ padding: "10px 20px" }}>Play Music</button>
         </div>
       ) : gameOver ? (
         <div style={{ position: "absolute", width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", background: "#fff", zIndex: 10 }}>
           <h2>Game Over</h2>
           <p>Final Score: {finalScore}</p>
-          <button onClick={() => { setGameOver(false); setStarted(false); }}>Restart</button>
+          <button onClick={() => { setGameOver(false); setStarted(false); setMusicEnabled(false); }}>Restart</button>
         </div>
       ) : (
         <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", backgroundColor: "#eef" }} />
