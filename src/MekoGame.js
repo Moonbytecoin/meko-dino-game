@@ -1,4 +1,4 @@
-// A refined Meko Dino Game with better collisions, smoother blocks, and respawning egg + rabbit enemy
+// A vertical jumping version of Meko Game with bunny chase and upward egg collecting
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -26,49 +26,45 @@ const MekoGame = () => {
     const rabbitImg = new Image();
     rabbitImg.src = process.env.PUBLIC_URL + "/rabbit.png";
 
+    const gravity = 0.6;
+    let scrollOffset = 0;
+    let score = 0;
+
     const meko = {
-      x: canvas.width * 0.1,
-      y: canvas.height - 160,
-      width: 120,
-      height: 120,
+      x: canvas.width / 2 - 30,
+      y: canvas.height - 150,
+      width: 60,
+      height: 60,
       velocityY: 0,
-      jumpForce: 14,
-      speed: 6,
-      grounded: true,
+      jumpForce: 15,
+      speed: 5,
     };
 
-    const gravity = 0.6;
-    let score = 0;
-    let egg = {
-      x: canvas.width * 0.8,
-      y: canvas.height - 130,
-      width: 50,
-      height: 60,
+    const egg = {
+      x: Math.random() * (canvas.width - 50),
+      y: canvas.height - 800,
+      width: 40,
+      height: 50,
       collected: false,
     };
-    const rabbit = {
-      x: canvas.width + 100,
-      y: canvas.height - 130,
-      width: 80,
-      height: 80,
-      speed: 4,
-    };
-    let frameCount = 0;
-    let obstacles = [];
-    let obstacleInterval;
 
-    const spawnObstacle = () => {
-      const size = 40;
-      const speed = 4 + Math.random() * 3;
-      const baseY = canvas.height - size - 50;
-      obstacles.push({
-        x: canvas.width + size,
-        y: baseY,
-        width: size,
-        height: size,
-        speed,
-      });
+    const rabbit = {
+      x: canvas.width / 2 - 40,
+      y: canvas.height - 80,
+      width: 60,
+      height: 60,
+      speed: 1.2,
     };
+
+    let platforms = [];
+    for (let i = 0; i < 10; i++) {
+      platforms.push({
+        x: Math.random() * (canvas.width - 80),
+        y: canvas.height - i * 100,
+        width: 80,
+        height: 10,
+      });
+    }
 
     const resetGame = () => {
       setGameOver(true);
@@ -76,15 +72,9 @@ const MekoGame = () => {
     };
 
     const respawnEgg = () => {
-      setTimeout(() => {
-        egg = {
-          x: Math.random() * (canvas.width - 60) + 30,
-          y: canvas.height - 130,
-          width: 50,
-          height: 60,
-          collected: false,
-        };
-      }, 3000);
+      egg.x = Math.random() * (canvas.width - egg.width);
+      egg.y -= 600;
+      egg.collected = false;
     };
 
     const update = () => {
@@ -92,49 +82,53 @@ const MekoGame = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-      if (!meko.grounded) meko.velocityY += gravity;
-      meko.y += meko.velocityY;
-      if (meko.y >= canvas.height - meko.height - 50) {
-        meko.y = canvas.height - meko.height - 50;
-        meko.velocityY = 0;
-        meko.grounded = true;
-      }
-
-      if (keys.current["ArrowRight"]) meko.x += meko.speed;
-      if (keys.current["ArrowLeft"]) meko.x -= meko.speed;
-      meko.x = Math.max(0, Math.min(canvas.width - meko.width, meko.x));
-
-      ctx.drawImage(mekoImg, meko.x, meko.y, meko.width, meko.height);
-
-      rabbit.x -= rabbit.speed;
-      if (rabbit.x + rabbit.width < 0) rabbit.x = canvas.width + Math.random() * 200;
+      // Bunny logic
+      if (rabbit.y < meko.y) rabbit.y += rabbit.speed;
       ctx.drawImage(rabbitImg, rabbit.x, rabbit.y, rabbit.width, rabbit.height);
-
       if (
-        meko.x < rabbit.x + rabbit.width - 10 &&
-        meko.x + meko.width > rabbit.x + 10 &&
-        meko.y < rabbit.y + rabbit.height - 10 &&
-        meko.y + meko.height > rabbit.y + 10
+        meko.x < rabbit.x + rabbit.width &&
+        meko.x + meko.width > rabbit.x &&
+        meko.y < rabbit.y + rabbit.height &&
+        meko.y + meko.height > rabbit.y
       ) {
         resetGame();
         return;
       }
 
-      for (let ob of obstacles) {
-        ob.x -= ob.speed;
-        ctx.fillStyle = "#e00";
-        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      // Meko physics
+      meko.velocityY += gravity;
+      meko.y += meko.velocityY;
+
+      if (meko.y < canvas.height / 2) {
+        const diff = canvas.height / 2 - meko.y;
+        scrollOffset += diff;
+        meko.y = canvas.height / 2;
+        platforms.forEach((p) => (p.y += diff));
+        egg.y += diff;
+        rabbit.y += diff;
+      }
+
+      if (keys.current["ArrowLeft"]) meko.x -= meko.speed;
+      if (keys.current["ArrowRight"]) meko.x += meko.speed;
+      meko.x = Math.max(0, Math.min(canvas.width - meko.width, meko.x));
+
+      ctx.drawImage(mekoImg, meko.x, meko.y, meko.width, meko.height);
+
+      platforms.forEach((p) => {
+        ctx.fillStyle = "#444";
+        ctx.fillRect(p.x, p.y, p.width, p.height);
 
         if (
-          meko.x < ob.x + ob.width - 10 &&
-          meko.x + meko.width > ob.x + 10 &&
-          meko.y < ob.y + ob.height - 10 &&
-          meko.y + meko.height > ob.y + 10
+          meko.y + meko.height >= p.y &&
+          meko.y + meko.height <= p.y + 10 &&
+          meko.x + meko.width > p.x &&
+          meko.x < p.x + p.width &&
+          meko.velocityY > 0
         ) {
-          resetGame();
-          return;
+          meko.velocityY = -meko.jumpForce;
+          jumpSound.play();
         }
-      }
+      });
 
       if (!egg.collected) {
         ctx.drawImage(eggImg, egg.x, egg.y, egg.width, egg.height);
@@ -146,30 +140,19 @@ const MekoGame = () => {
         ) {
           egg.collected = true;
           score += 10;
-          meko.width *= 1.2;
-          meko.height *= 1.2;
           respawnEgg();
         }
       }
 
-      frameCount++;
-      if (frameCount % 60 === 0) score++;
       ctx.fillStyle = "black";
       ctx.font = "20px Arial";
       ctx.fillText("Score: " + score, 20, 30);
-
       requestAnimationFrame(update);
     };
 
     const handleKeyDown = (e) => {
       keys.current[e.code] = true;
-      if (e.code === "Space" && meko.grounded) {
-        jumpSound.play();
-        meko.velocityY = -meko.jumpForce;
-        meko.grounded = false;
-      }
     };
-
     const handleKeyUp = (e) => {
       keys.current[e.code] = false;
     };
@@ -180,7 +163,6 @@ const MekoGame = () => {
       if (imagesLoaded === 4) {
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
-        obstacleInterval = setInterval(spawnObstacle, 1800);
         update();
       }
     };
@@ -191,7 +173,6 @@ const MekoGame = () => {
     rabbitImg.onload = tryStart;
 
     return () => {
-      clearInterval(obstacleInterval);
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
     };
