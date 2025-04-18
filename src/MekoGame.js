@@ -30,15 +30,15 @@ const MekoGame = () => {
 
     const resetGameState = () => {
       const meko = {
-        x: canvas.width / 2 - 40,
+        x: canvas.width / 2 - 50,
         y: canvas.height - 250,
-        width: 80,
-        height: 80,
+        width: 100,
+        height: 100,
         velocityY: 0,
         jumpForce: 15,
         speed: 5,
         growth: 1,
-        originalSize: 80,
+        originalSize: 100,
       };
 
       const egg = {
@@ -51,10 +51,9 @@ const MekoGame = () => {
 
       const generatePlatforms = () => {
         const platforms = [];
-        const spacing = 70;
+        const spacing = 60;
         let y = canvas.height - 50;
 
-        // Base platform at bottom center
         platforms.push({
           x: canvas.width / 2 - 50,
           y: canvas.height - 60,
@@ -81,7 +80,7 @@ const MekoGame = () => {
               const width = 100;
               const height = 12;
               const x = Math.random() * (canvas.width - width);
-              const dx = group.type === "moving" ? 2.5 : 0;
+              const dx = group.type === "moving" ? 3.5 : 0;
               platforms.push({ x, y, width, height, dx });
               y -= spacing;
             }
