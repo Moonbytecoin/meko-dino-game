@@ -29,10 +29,10 @@ const MekoGame = () => {
 
     const resetGameState = () => {
       const meko = {
-        x: canvas.width / 2 - 30,
+        x: canvas.width / 2 - 40,
         y: canvas.height - 150,
-        width: 60,
-        height: 60,
+        width: 80,
+        height: 80,
         velocityY: 0,
         jumpForce: 15,
         speed: 5,
@@ -50,19 +50,19 @@ const MekoGame = () => {
       const generatePlatforms = () => {
         const platforms = [];
         platforms.push({
-          x: canvas.width / 2 - 40,
+          x: canvas.width / 2 - 50,
           y: canvas.height - 50,
-          width: 80,
-          height: 10,
+          width: 100,
+          height: 12,
           dx: 0,
         });
-        for (let i = 1; i < 12; i++) {
+        for (let i = 1; i < 14; i++) {
           const move = Math.random() < 0.4 ? 1.5 : 0;
           platforms.push({
-            x: Math.random() * (canvas.width - 80),
-            y: canvas.height - i * 70,
-            width: 80,
-            height: 10,
+            x: Math.random() * (canvas.width - 100),
+            y: canvas.height - i * 60,
+            width: 100,
+            height: 12,
             dx: move,
           });
         }
@@ -138,7 +138,7 @@ const MekoGame = () => {
 
         if (
           meko.y + meko.height * meko.growth >= p.y &&
-          meko.y + meko.height * meko.growth <= p.y + 10 &&
+          meko.y + meko.height * meko.growth <= p.y + 12 &&
           meko.x + meko.width * meko.growth > p.x &&
           meko.x < p.x + p.width &&
           meko.velocityY > 0
