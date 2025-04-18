@@ -32,13 +32,13 @@ const MekoGame = () => {
       const meko = {
         x: canvas.width / 2 - 50,
         y: canvas.height - 250,
-        width: 100,
-        height: 100,
+        width: 110,
+        height: 110,
         velocityY: 0,
         jumpForce: 15,
         speed: 5,
         growth: 1,
-        originalSize: 100,
+        originalSize: 110,
       };
 
       const egg = {
@@ -51,7 +51,7 @@ const MekoGame = () => {
 
       const generatePlatforms = () => {
         const platforms = [];
-        const spacing = 60;
+        const spacing = 55;
         let y = canvas.height - 50;
 
         platforms.push({
@@ -80,7 +80,7 @@ const MekoGame = () => {
               const width = 100;
               const height = 12;
               const x = Math.random() * (canvas.width - width);
-              const dx = group.type === "moving" ? 3.5 : 0;
+              const dx = group.type === "moving" ? 4.5 : 0;
               platforms.push({ x, y, width, height, dx });
               y -= spacing;
             }
@@ -208,6 +208,7 @@ const MekoGame = () => {
       imagesLoaded++;
       if (imagesLoaded === 3) {
         resetGameState();
+        Object.keys(keys.current).forEach(k => keys.current[k] = false);
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
         update();
