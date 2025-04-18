@@ -1,4 +1,4 @@
-// A refined Meko Dino Game with better collisions, smoother blocks, and respawning egg
+// A refined Meko Dino Game with better collisions, smoother blocks, and respawning egg + rabbit enemy
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -23,6 +23,8 @@ const MekoGame = () => {
     eggImg.src = process.env.PUBLIC_URL + "/egg.png";
     const bgImg = new Image();
     bgImg.src = process.env.PUBLIC_URL + "/background.png";
+    const rabbitImg = new Image();
+    rabbitImg.src = process.env.PUBLIC_URL + "/rabbit.png";
 
     const meko = {
       x: canvas.width * 0.1,
@@ -44,24 +46,27 @@ const MekoGame = () => {
       height: 60,
       collected: false,
     };
+    const rabbit = {
+      x: canvas.width + 100,
+      y: canvas.height - 130,
+      width: 80,
+      height: 80,
+      speed: 4,
+    };
     let frameCount = 0;
     let obstacles = [];
     let obstacleInterval;
 
     const spawnObstacle = () => {
       const size = 40;
-      const speed = 5 + Math.random() * 4;
-      const dirY = Math.random() > 0.5 ? 1 : -1;
+      const speed = 4 + Math.random() * 3;
       const baseY = canvas.height - size - 50;
-      const vertical = Math.random() > 0.3;
       obstacles.push({
         x: canvas.width + size,
         y: baseY,
         width: size,
         height: size,
         speed,
-        dirY: vertical ? dirY : 0,
-        baseY,
       });
     };
 
@@ -101,12 +106,22 @@ const MekoGame = () => {
 
       ctx.drawImage(mekoImg, meko.x, meko.y, meko.width, meko.height);
 
+      rabbit.x -= rabbit.speed;
+      if (rabbit.x + rabbit.width < 0) rabbit.x = canvas.width + Math.random() * 200;
+      ctx.drawImage(rabbitImg, rabbit.x, rabbit.y, rabbit.width, rabbit.height);
+
+      if (
+        meko.x < rabbit.x + rabbit.width - 10 &&
+        meko.x + meko.width > rabbit.x + 10 &&
+        meko.y < rabbit.y + rabbit.height - 10 &&
+        meko.y + meko.height > rabbit.y + 10
+      ) {
+        resetGame();
+        return;
+      }
+
       for (let ob of obstacles) {
         ob.x -= ob.speed;
-        if (ob.dirY !== 0) {
-          ob.y += ob.dirY;
-          if (ob.y > ob.baseY + 40 || ob.y < ob.baseY - 40) ob.dirY *= -1;
-        }
         ctx.fillStyle = "#e00";
         ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
 
@@ -162,7 +177,7 @@ const MekoGame = () => {
     let imagesLoaded = 0;
     const tryStart = () => {
       imagesLoaded++;
-      if (imagesLoaded === 3) {
+      if (imagesLoaded === 4) {
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
         obstacleInterval = setInterval(spawnObstacle, 1800);
@@ -173,6 +188,7 @@ const MekoGame = () => {
     mekoImg.onload = tryStart;
     eggImg.onload = tryStart;
     bgImg.onload = tryStart;
+    rabbitImg.onload = tryStart;
 
     return () => {
       clearInterval(obstacleInterval);
