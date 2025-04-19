@@ -10,6 +10,7 @@ const MekoGame = () => {
   const keys = useRef({});
   const gameState = useRef({});
   const growthTimer = useRef(null);
+  const lastPlatformGenY = useRef(-10000);
 
   useEffect(() => {
     if (!started || gameOver) return;
@@ -30,25 +31,22 @@ const MekoGame = () => {
 
     const generatePlatforms = (minY = -10000) => {
       const platforms = [];
-      const spacing = 100;
-      let y = canvas.height - 60;
-      platforms.push({ x: canvas.width / 2 - 50, y, width: 100, height: 12, dx: 0 });
-      y -= spacing;
+      const spacing = 140;
+      let y = minY;
 
-      while (y > minY) {
-        const pattern = Math.random();
-        let type = pattern < 0.5 ? "solid" : "moving";
-        let count = Math.floor(Math.random() * 2) + 1;
+      while (y > minY - 1000) {
+        const count = Math.floor(Math.random() * 2) + 1;
         for (let i = 0; i < count; i++) {
           const width = 100;
           const height = 12;
           const x = Math.random() * (canvas.width - width);
-          const dx = type === "moving" ? 3 : 0;
+          const dx = Math.random() < 0.4 ? 3 : 0;
           platforms.push({ x, y, width, height, dx });
         }
         y -= spacing;
       }
 
+      lastPlatformGenY.current = y;
       return platforms;
     };
 
@@ -74,10 +72,12 @@ const MekoGame = () => {
         collected: false,
       };
 
+      lastPlatformGenY.current = -10000;
+
       gameState.current = {
         meko,
         egg,
-        platforms: generatePlatforms(),
+        platforms: generatePlatforms(canvas.height - 60),
         score: 0,
         scrollOffset: 0,
       };
@@ -115,9 +115,8 @@ const MekoGame = () => {
         platforms.forEach((p) => (p.y += diff));
         egg.y += diff;
 
-        const highestPlatform = Math.min(...platforms.map((p) => p.y));
-        if (highestPlatform > -10000) {
-          state.platforms.push(...generatePlatforms(highestPlatform - 400));
+        if (lastPlatformGenY.current - diff < -10000) {
+          state.platforms.push(...generatePlatforms(lastPlatformGenY.current));
         }
       }
 
