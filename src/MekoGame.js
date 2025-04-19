@@ -52,7 +52,7 @@ const MekoGame = () => {
 
       const generatePlatforms = () => {
         const platforms = [];
-        const spacing = 100;
+        const spacing = 60;
         let y = canvas.height - 60;
         platforms.push({ x: canvas.width / 2 - 50, y, width: 100, height: 12, dx: 0 });
         y -= spacing;
@@ -65,9 +65,9 @@ const MekoGame = () => {
             const width = 100;
             const height = 12;
             const x = Math.random() * (canvas.width - width);
-            const dx = type === "moving" ? 1.8 : 0;
+            const dx = type === "moving" ? 2.5 : 0;
             platforms.push({ x, y, width, height, dx });
-            y -= spacing + Math.random() * 30;
+            y -= spacing + Math.random() * 20;
           }
         }
 
