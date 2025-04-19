@@ -52,38 +52,22 @@ const MekoGame = () => {
 
       const generatePlatforms = () => {
         const platforms = [];
-        const spacing = 60;
-        let y = canvas.height - 50;
-
-        platforms.push({
-          x: canvas.width / 2 - 50,
-          y: canvas.height - 60,
-          width: 100,
-          height: 12,
-          dx: 0,
-        });
-
-        const pattern = [
-          { type: "moving", count: 1 },
-          { type: "solid", count: 2 },
-          { type: "moving", count: 1 },
-          { type: "solid", count: 1 },
-          { type: "moving", count: 2 },
-          { type: "solid", count: 2 },
-        ];
-
+        const spacing = 100;
+        let y = canvas.height - 60;
+        platforms.push({ x: canvas.width / 2 - 50, y, width: 100, height: 12, dx: 0 });
         y -= spacing;
 
         while (y > -10000) {
-          for (let group of pattern) {
-            for (let i = 0; i < group.count; i++) {
-              const width = 100;
-              const height = 12;
-              const x = Math.random() * (canvas.width - width);
-              const dx = group.type === "moving" ? 2.3 : 0;
-              platforms.push({ x, y, width, height, dx });
-              y -= spacing;
-            }
+          const pattern = Math.random();
+          let type = pattern < 0.5 ? "solid" : "moving";
+          let count = Math.floor(Math.random() * 2) + 1;
+          for (let i = 0; i < count; i++) {
+            const width = 100;
+            const height = 12;
+            const x = Math.random() * (canvas.width - width);
+            const dx = type === "moving" ? 1.8 : 0;
+            platforms.push({ x, y, width, height, dx });
+            y -= spacing + Math.random() * 30;
           }
         }
 
@@ -149,8 +133,6 @@ const MekoGame = () => {
         meko.height * meko.growth
       );
 
-      let landed = false;
-
       platforms.forEach((p) => {
         if (p.dx) {
           p.x += p.dx;
@@ -170,7 +152,6 @@ const MekoGame = () => {
           meko.velocityY = -meko.jumpForce * meko.growth;
           jumpSound.play();
           state.score += 1;
-          landed = true;
         }
       });
 
