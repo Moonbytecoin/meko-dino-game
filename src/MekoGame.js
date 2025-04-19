@@ -28,6 +28,30 @@ const MekoGame = () => {
 
     const gravity = 0.6;
 
+    const generatePlatforms = (minY = -10000) => {
+      const platforms = [];
+      const spacing = 100;
+      let y = canvas.height - 60;
+      platforms.push({ x: canvas.width / 2 - 50, y, width: 100, height: 12, dx: 0 });
+      y -= spacing;
+
+      while (y > minY) {
+        const pattern = Math.random();
+        let type = pattern < 0.5 ? "solid" : "moving";
+        let count = Math.floor(Math.random() * 2) + 1;
+        for (let i = 0; i < count; i++) {
+          const width = 100;
+          const height = 12;
+          const x = Math.random() * (canvas.width - width);
+          const dx = type === "moving" ? 3 : 0;
+          platforms.push({ x, y, width, height, dx });
+        }
+        y -= spacing;
+      }
+
+      return platforms;
+    };
+
     const resetGameState = () => {
       const meko = {
         x: canvas.width / 2 - 60,
@@ -50,30 +74,6 @@ const MekoGame = () => {
         collected: false,
       };
 
-      const generatePlatforms = () => {
-        const platforms = [];
-        const spacing = 70;
-        let y = canvas.height - 60;
-        platforms.push({ x: canvas.width / 2 - 50, y, width: 100, height: 12, dx: 0 });
-        y -= spacing;
-
-        while (y > -10000) {
-          const pattern = Math.random();
-          let type = pattern < 0.5 ? "solid" : "moving";
-          let count = Math.floor(Math.random() * 2) + 1;
-          for (let i = 0; i < count; i++) {
-            const width = 100;
-            const height = 12;
-            const x = Math.random() * (canvas.width - width);
-            const dx = type === "moving" ? 4.5 : 0;
-            platforms.push({ x, y, width, height, dx });
-          }
-          y -= spacing;
-        }
-
-        return platforms;
-      };
-
       gameState.current = {
         meko,
         egg,
@@ -91,8 +91,8 @@ const MekoGame = () => {
 
     const respawnEgg = () => {
       const state = gameState.current;
-      const verticalStep = 500;
-      const newY = state.scrollOffset + verticalStep + Math.random() * 100;
+      const verticalStep = 800;
+      const newY = state.scrollOffset + verticalStep + Math.random() * 200;
       state.egg.x = Math.random() * (canvas.width - state.egg.width);
       state.egg.y = canvas.height - newY;
       state.egg.collected = false;
@@ -114,6 +114,11 @@ const MekoGame = () => {
         meko.y = canvas.height / 2;
         platforms.forEach((p) => (p.y += diff));
         egg.y += diff;
+
+        const highestPlatform = Math.min(...platforms.map((p) => p.y));
+        if (highestPlatform > -10000) {
+          state.platforms.push(...generatePlatforms(highestPlatform - 400));
+        }
       }
 
       if (meko.y > canvas.height + 100) {
