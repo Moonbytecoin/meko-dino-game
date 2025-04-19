@@ -1,4 +1,4 @@
-// A vertical jumping version of Meko Game with upward egg collecting and improved platform logic
+// A vertical jumping version of Meko Game with improved endless platform generation
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -31,16 +31,16 @@ const MekoGame = () => {
 
     const generatePlatforms = (minY = -10000) => {
       const platforms = [];
-      const spacing = 140;
+      const spacing = 120;
       let y = minY;
 
-      while (y > minY - 1000) {
-        const count = Math.floor(Math.random() * 2) + 1;
+      while (y > minY - 1200) {
+        const count = Math.floor(Math.random() * 2) + 2;
         for (let i = 0; i < count; i++) {
           const width = 100;
           const height = 12;
           const x = Math.random() * (canvas.width - width);
-          const dx = Math.random() < 0.4 ? 3 : 0;
+          const dx = Math.random() < 0.5 ? 4 : 0;
           platforms.push({ x, y, width, height, dx });
         }
         y -= spacing;
@@ -74,10 +74,18 @@ const MekoGame = () => {
 
       lastPlatformGenY.current = -10000;
 
+      const basePlatform = {
+        x: canvas.width / 2 - 75,
+        y: canvas.height - 60,
+        width: 150,
+        height: 15,
+        dx: 0,
+      };
+
       gameState.current = {
         meko,
         egg,
-        platforms: generatePlatforms(canvas.height - 60),
+        platforms: [basePlatform, ...generatePlatforms(canvas.height - 100)],
         score: 0,
         scrollOffset: 0,
       };
