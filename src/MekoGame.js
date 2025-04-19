@@ -1,4 +1,4 @@
-// A vertical jumping version of Meko Game with improved endless platform generation
+// A vertical jumping version of Meko Game with fixed ultra-tall platform stack
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -10,7 +10,6 @@ const MekoGame = () => {
   const keys = useRef({});
   const gameState = useRef({});
   const growthTimer = useRef(null);
-  const lastPlatformGenY = useRef(0);
 
   useEffect(() => {
     if (!started || gameOver) return;
@@ -29,7 +28,7 @@ const MekoGame = () => {
 
     const gravity = 0.6;
 
-    const generatePlatforms = (startY = 0) => {
+    const generateFullPlatformStack = (startY = 0, minY = -100000) => {
       const platforms = [];
       const spacing = 110;
       let y = startY;
@@ -43,7 +42,7 @@ const MekoGame = () => {
         ["moving", "moving"],
       ];
 
-      for (let i = 0; i < 15; i++) {
+      while (y > minY) {
         const pattern = layoutPatterns[Math.floor(Math.random() * layoutPatterns.length)];
         const rowPlatforms = [];
 
@@ -58,7 +57,7 @@ const MekoGame = () => {
             x = Math.random() * (canvas.width - width);
             tries++;
           } while (
-            rowPlatforms.some(p => Math.abs(p.x - x) < width + 20) && tries < 10
+            rowPlatforms.some((p) => Math.abs(p.x - x) < width + 20) && tries < 10
           );
 
           rowPlatforms.push({ x, y, width, height, dx });
@@ -68,7 +67,6 @@ const MekoGame = () => {
         y -= spacing;
       }
 
-      lastPlatformGenY.current = y;
       return platforms;
     };
 
@@ -94,8 +92,6 @@ const MekoGame = () => {
         collected: false,
       };
 
-      lastPlatformGenY.current = canvas.height - 100;
-
       const basePlatform = {
         x: canvas.width / 2 - 75,
         y: canvas.height - 60,
@@ -107,7 +103,7 @@ const MekoGame = () => {
       gameState.current = {
         meko,
         egg,
-        platforms: [basePlatform, ...generatePlatforms(canvas.height - 120)],
+        platforms: [basePlatform, ...generateFullPlatformStack(canvas.height - 120)],
         score: 0,
         scrollOffset: 0,
       };
@@ -144,10 +140,6 @@ const MekoGame = () => {
         meko.y = canvas.height / 2;
         platforms.forEach((p) => (p.y += diff));
         egg.y += diff;
-
-        while (lastPlatformGenY.current > -state.scrollOffset - 300) {
-          state.platforms.push(...generatePlatforms(lastPlatformGenY.current));
-        }
       }
 
       if (meko.y > canvas.height + 100) {
