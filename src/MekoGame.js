@@ -80,7 +80,7 @@ const MekoGame = () => {
               const width = 100;
               const height = 12;
               const x = Math.random() * (canvas.width - width);
-              const dx = group.type === "moving" ? 6.5 : 0;
+              const dx = group.type === "moving" ? 3.5 : 0;
               platforms.push({ x, y, width, height, dx });
               y -= spacing;
             }
