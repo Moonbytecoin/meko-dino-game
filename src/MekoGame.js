@@ -137,7 +137,8 @@ const MekoGame = () => {
         platforms.forEach((p) => (p.y += diff));
         egg.y += diff;
 
-        if (lastPlatformGenY.current > state.scrollOffset - 1000) {
+        // Updated line for improved platform generation
+        if (lastPlatformGenY.current > state.scrollOffset - canvas.height * 2) {
           state.platforms.push(...generatePlatforms(lastPlatformGenY.current));
         }
       }
