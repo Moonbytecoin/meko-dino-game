@@ -35,8 +35,8 @@ const MekoGame = () => {
         width: 130,
         height: 130,
         velocityY: 0,
-        jumpForce: 17,
-        speed: 6,
+        jumpForce: 19,
+        speed: 7,
         growth: 1,
         originalSize: 130,
         lastPlatformY: null,
@@ -52,7 +52,7 @@ const MekoGame = () => {
 
       const generatePlatforms = () => {
         const platforms = [];
-        const spacing = 55;
+        const spacing = 70;
         let y = canvas.height - 60;
         platforms.push({ x: canvas.width / 2 - 50, y, width: 100, height: 12, dx: 0 });
         y -= spacing;
@@ -65,10 +65,10 @@ const MekoGame = () => {
             const width = 100;
             const height = 12;
             const x = Math.random() * (canvas.width - width);
-            const dx = type === "moving" ? 3.5 : 0;
+            const dx = type === "moving" ? 4.5 : 0;
             platforms.push({ x, y, width, height, dx });
-            y -= spacing + Math.random() * 15;
           }
+          y -= spacing;
         }
 
         return platforms;
@@ -172,7 +172,7 @@ const MekoGame = () => {
           clearTimeout(growthTimer.current);
           growthTimer.current = setTimeout(() => {
             meko.growth = 1;
-            meko.jumpForce = 17;
+            meko.jumpForce = 19;
           }, 10000);
         }
       }
