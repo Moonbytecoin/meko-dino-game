@@ -10,7 +10,7 @@ const MekoGame = () => {
   const keys = useRef({});
   const gameState = useRef({});
   const growthTimer = useRef(null);
-  const lastPlatformGenY = useRef(-10000);
+  const lastPlatformGenY = useRef(0);
 
   useEffect(() => {
     if (!started || gameOver) return;
@@ -29,20 +29,42 @@ const MekoGame = () => {
 
     const gravity = 0.6;
 
-    const generatePlatforms = (minY = -10000) => {
+    const generatePlatforms = (startY = 0) => {
       const platforms = [];
-      const spacing = 120;
-      let y = minY;
+      const spacing = 110;
+      let y = startY;
 
-      while (y > minY - 1200) {
-        const count = Math.floor(Math.random() * 2) + 2;
-        for (let i = 0; i < count; i++) {
+      const layoutPatterns = [
+        ["solid"],
+        ["moving"],
+        ["solid", "moving"],
+        ["moving", "solid"],
+        ["solid", "solid"],
+        ["moving", "moving"],
+      ];
+
+      for (let i = 0; i < 15; i++) {
+        const pattern = layoutPatterns[Math.floor(Math.random() * layoutPatterns.length)];
+        const rowPlatforms = [];
+
+        pattern.forEach(() => {
           const width = 100;
           const height = 12;
-          const x = Math.random() * (canvas.width - width);
-          const dx = Math.random() < 0.5 ? 4 : 0;
-          platforms.push({ x, y, width, height, dx });
-        }
+          let x;
+          let dx = Math.random() < 0.4 ? 2.5 : 0;
+
+          let tries = 0;
+          do {
+            x = Math.random() * (canvas.width - width);
+            tries++;
+          } while (
+            rowPlatforms.some(p => Math.abs(p.x - x) < width + 20) && tries < 10
+          );
+
+          rowPlatforms.push({ x, y, width, height, dx });
+        });
+
+        platforms.push(...rowPlatforms);
         y -= spacing;
       }
 
@@ -72,7 +94,7 @@ const MekoGame = () => {
         collected: false,
       };
 
-      lastPlatformGenY.current = -10000;
+      lastPlatformGenY.current = canvas.height - 100;
 
       const basePlatform = {
         x: canvas.width / 2 - 75,
@@ -85,7 +107,7 @@ const MekoGame = () => {
       gameState.current = {
         meko,
         egg,
-        platforms: [basePlatform, ...generatePlatforms(canvas.height - 100)],
+        platforms: [basePlatform, ...generatePlatforms(canvas.height - 120)],
         score: 0,
         scrollOffset: 0,
       };
@@ -123,7 +145,7 @@ const MekoGame = () => {
         platforms.forEach((p) => (p.y += diff));
         egg.y += diff;
 
-        if (lastPlatformGenY.current - diff < -10000) {
+        if (lastPlatformGenY.current > -state.scrollOffset + canvas.height) {
           state.platforms.push(...generatePlatforms(lastPlatformGenY.current));
         }
       }
