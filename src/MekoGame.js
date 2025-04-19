@@ -35,14 +35,28 @@ const MekoGame = () => {
       let y = minY;
 
       while (y > minY - 1200) {
-        const count = Math.floor(Math.random() * 2) + 2;
-        for (let i = 0; i < count; i++) {
+        const layoutPatterns = [
+          ["solid"],
+          ["moving"],
+          ["solid", "moving"],
+          ["moving", "solid"],
+          ["solid", "solid"],
+          ["moving", "moving"],
+        ];
+        const pattern = layoutPatterns[Math.floor(Math.random() * layoutPatterns.length)];
+
+        pattern.forEach(() => {
           const width = 100;
           const height = 12;
-          const x = Math.random() * (canvas.width - width);
-          const dx = Math.random() < 0.5 ? 4 : 0;
+          let x = Math.random() * (canvas.width - width);
+          let dx = Math.random() < 0.5 ? 2.5 : 0;
+          // Ensure no two platforms overlap horizontally
+          while (platforms.some(p => Math.abs(p.x - x) < width && Math.abs(p.y - y) < height)) {
+            x = Math.random() * (canvas.width - width);
+          }
           platforms.push({ x, y, width, height, dx });
-        }
+        });
+
         y -= spacing;
       }
 
