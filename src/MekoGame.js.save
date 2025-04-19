@@ -32,13 +32,13 @@ const MekoGame = () => {
       const meko = {
         x: canvas.width / 2 - 60,
         y: canvas.height - 250,
-        width: 120,
-        height: 120,
+        width: 130,
+        height: 130,
         velocityY: 0,
-        jumpForce: 16,
+        jumpForce: 17,
         speed: 5,
         growth: 1,
-        originalSize: 120,
+        originalSize: 130,
         lastPlatformY: null,
       };
 
@@ -80,7 +80,7 @@ const MekoGame = () => {
               const width = 100;
               const height = 12;
               const x = Math.random() * (canvas.width - width);
-              const dx = group.type === "moving" ? 6.5 : 0;
+              const dx = group.type === "moving" ? 2.3 : 0;
               platforms.push({ x, y, width, height, dx });
               y -= spacing;
             }
@@ -191,7 +191,7 @@ const MekoGame = () => {
           clearTimeout(growthTimer.current);
           growthTimer.current = setTimeout(() => {
             meko.growth = 1;
-            meko.jumpForce = 16;
+            meko.jumpForce = 17;
           }, 10000);
         }
       }
