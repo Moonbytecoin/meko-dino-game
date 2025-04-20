@@ -1,4 +1,4 @@
-// A vertical jumping version of Meko Game with improved endless platform generation
+// A vertical jumping version of Meko Game with endless platform generation and refined gameplay
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -30,45 +30,29 @@ const MekoGame = () => {
 
     const gravity = 0.6;
 
-    const generatePlatforms = (startY = 0) => {
+    const generatePlatforms = (startY) => {
       const platforms = [];
       const spacing = 110;
       let y = startY;
-
-      const layoutPatterns = [
-        ["solid"],
-        ["moving"],
-        ["solid", "moving"],
-        ["moving", "solid"],
-        ["solid", "solid"],
-        ["moving", "moving"],
-      ];
-
-      for (let i = 0; i < 75; i++) {
+      const layoutPatterns = [["solid"], ["moving"], ["solid", "moving"], ["moving", "solid"], ["solid", "solid"], ["moving", "moving"]];
+      for (let i = 0; i < 40; i++) {
         const pattern = layoutPatterns[Math.floor(Math.random() * layoutPatterns.length)];
-        const rowPlatforms = [];
-
+        const row = [];
         pattern.forEach(() => {
           const width = 100;
           const height = 12;
           let x;
-          let dx = Math.random() < 0.4 ? 2.5 : 0;
-
+          let dx = Math.random() < 0.5 ? 2.2 : 0;
           let tries = 0;
           do {
             x = Math.random() * (canvas.width - width);
             tries++;
-          } while (
-            rowPlatforms.some(p => Math.abs(p.x - x) < width + 20) && tries < 10
-          );
-
-          rowPlatforms.push({ x, y, width, height, dx });
+          } while (row.some(p => Math.abs(p.x - x) < width + 20) && tries < 10);
+          row.push({ x, y, width, height, dx });
         });
-
-        platforms.push(...rowPlatforms);
+        platforms.push(...row);
         y -= spacing;
       }
-
       lastPlatformGenY.current = y;
       return platforms;
     };
@@ -80,8 +64,8 @@ const MekoGame = () => {
         width: 130,
         height: 130,
         velocityY: 0,
-        jumpForce: 19,
-        speed: 7,
+        jumpForce: 18,
+        speed: 6.5,
         growth: 1,
         originalSize: 130,
         lastPlatformY: null,
@@ -114,12 +98,6 @@ const MekoGame = () => {
       };
     };
 
-    const resetGame = () => {
-      setGameOver(true);
-      setFinalScore(gameState.current.score);
-      clearTimeout(growthTimer.current);
-    };
-
     const respawnEgg = () => {
       const state = gameState.current;
       const verticalStep = 800;
@@ -133,8 +111,6 @@ const MekoGame = () => {
       if (gameOver) return;
       const state = gameState.current;
       const { meko, egg, platforms } = state;
-      const platformSpacing = 110;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
@@ -147,12 +123,19 @@ const MekoGame = () => {
         const diff = canvas.height / 2 - meko.y;
         state.scrollOffset += diff;
         meko.y = canvas.height / 2;
-        platforms.forEach((p) => (p.y += diff));
+        platforms.forEach(p => (p.y += diff));
         egg.y += diff;
+
+        if (state.scrollOffset - lastPlatformGenY.current > 4000) {
+          const newPlatforms = generatePlatforms(lastPlatformGenY.current);
+          state.platforms.push(...newPlatforms);
+        }
       }
 
       if (meko.y > canvas.height + 100) {
-        resetGame();
+        setGameOver(true);
+        setFinalScore(state.score);
+        clearTimeout(growthTimer.current);
         return;
       }
 
@@ -160,15 +143,9 @@ const MekoGame = () => {
       if (keys.current["ArrowRight"]) meko.x += meko.speed;
       meko.x = Math.max(0, Math.min(canvas.width - meko.width * meko.growth, meko.x));
 
-      ctx.drawImage(
-        mekoImg,
-        meko.x,
-        meko.y,
-        meko.width * meko.growth,
-        meko.height * meko.growth
-      );
+      ctx.drawImage(mekoImg, meko.x, meko.y, meko.width * meko.growth, meko.height * meko.growth);
 
-      platforms.forEach((p) => {
+      platforms.forEach(p => {
         if (p.dx) {
           p.x += p.dx;
           if (p.x < 0 || p.x + p.width > canvas.width) p.dx *= -1;
@@ -204,11 +181,10 @@ const MekoGame = () => {
           meko.jumpForce += 2;
           state.score += 10;
           respawnEgg();
-
           clearTimeout(growthTimer.current);
           growthTimer.current = setTimeout(() => {
             meko.growth = 1;
-            meko.jumpForce = 19;
+            meko.jumpForce = 18;
           }, 10000);
         }
       }
@@ -221,18 +197,16 @@ const MekoGame = () => {
 
     const handleKeyDown = (e) => {
       keys.current[e.code] = true;
-      if (!firstJump && e.code === "Space") {
-        setFirstJump(true);
-      }
+      if (!firstJump && e.code === "Space") setFirstJump(true);
     };
     const handleKeyUp = (e) => {
       keys.current[e.code] = false;
     };
 
-    let imagesLoaded = 0;
+    let loaded = 0;
     const tryStart = () => {
-      imagesLoaded++;
-      if (imagesLoaded === 3) {
+      loaded++;
+      if (loaded === 3) {
         resetGameState();
         Object.keys(keys.current).forEach((k) => (keys.current[k] = false));
         document.addEventListener("keydown", handleKeyDown);
@@ -255,62 +229,18 @@ const MekoGame = () => {
   return (
     <div style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
       {!started ? (
-        <div
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            flexDirection: "column",
-            background: "#fff",
-            zIndex: 10,
-          }}
-        >
-          <img
-            src={process.env.PUBLIC_URL + "/meko.png"}
-            alt="Start Meko"
-            style={{ width: 120, height: 120, marginBottom: 20 }}
-          />
-          <button
-            onClick={() => setStarted(true)}
-            style={{ padding: "12px 24px", fontSize: "1.2rem", marginBottom: 10 }}
-          >
-            Start Game
-          </button>
+        <div style={{ position: "absolute", width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", background: "#fff", zIndex: 10 }}>
+          <img src={process.env.PUBLIC_URL + "/meko.png"} alt="Start Meko" style={{ width: 120, height: 120, marginBottom: 20 }} />
+          <button onClick={() => setStarted(true)} style={{ padding: "12px 24px", fontSize: "1.2rem", marginBottom: 10 }}>Start Game</button>
         </div>
       ) : gameOver ? (
-        <div
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            flexDirection: "column",
-            background: "#fff",
-            zIndex: 10,
-          }}
-        >
+        <div style={{ position: "absolute", width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", background: "#fff", zIndex: 10 }}>
           <h2>Game Over</h2>
           <p>Final Score: {finalScore}</p>
-          <button
-            onClick={() => {
-              setGameOver(false);
-              setFirstJump(false);
-              setStarted(true);
-            }}
-          >
-            Restart
-          </button>
+          <button onClick={() => { setGameOver(false); setFirstJump(false); setStarted(true); }}>Restart</button>
         </div>
       ) : (
-        <canvas
-          ref={canvasRef}
-          style={{ display: "block", width: "100%", height: "100%", backgroundColor: "#eef" }}
-        />
+        <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", backgroundColor: "#eef" }} />
       )}
     </div>
   );
