@@ -32,24 +32,26 @@ const MekoGame = () => {
 
     const generatePlatforms = (startY) => {
       const platforms = [];
-      const spacing = 100;
+      const spacing = 90;
       let y = startY;
-      const layoutPatterns = [["solid"], ["moving"], ["solid", "moving"], ["moving", "solid"], ["solid", "solid"], ["moving", "moving"]];
-      for (let i = 0; i < 40; i++) {
-        const pattern = layoutPatterns[Math.floor(Math.random() * layoutPatterns.length)];
+      const maxY = startY - 8000;
+      const rowWidth = canvas.width - 60;
+      let toggle = false;
+      while (y > maxY) {
+        const width = 100;
+        const height = 12;
+        const numPlatforms = Math.floor(Math.random() * 2) + 1;
         const row = [];
-        pattern.forEach(() => {
-          const width = 100;
-          const height = 12;
+        for (let i = 0; i < numPlatforms; i++) {
           let x;
-          let dx = Math.random() < 0.5 ? 2.6 : 0;
+          let dx = Math.random() < 0.3 ? 2.8 : 0;
           let tries = 0;
           do {
-            x = Math.random() * (canvas.width - width);
+            x = Math.random() * rowWidth;
             tries++;
-          } while (row.some(p => Math.abs(p.x - x) < width + 30) && tries < 10);
+          } while (row.some(p => Math.abs(p.x - x) < width + 40) && tries < 10);
           row.push({ x, y, width, height, dx });
-        });
+        }
         platforms.push(...row);
         y -= spacing;
       }
