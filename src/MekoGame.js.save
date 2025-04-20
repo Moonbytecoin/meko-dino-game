@@ -119,10 +119,10 @@ const MekoGame = () => {
         meko.y += meko.velocityY;
       }
 
-      if (meko.y < canvas.height * 0.4) {
-        const diff = canvas.height * 0.4 - meko.y;
+      if (meko.y < canvas.height * 0.6) {
+        const diff = canvas.height * 0.6 - meko.y;
         state.scrollOffset += diff;
-        meko.y = canvas.height * 0.4;
+        meko.y = canvas.height * 0.6;
         platforms.forEach(p => (p.y += diff));
         egg.y += diff;
 
