@@ -65,7 +65,7 @@ const MekoGame = () => {
         height: 130,
         velocityY: 0,
         jumpForce: 18,
-        speed: 6.5,
+        speed: 4.5,
         growth: 1,
         originalSize: 130,
         lastPlatformY: null,
