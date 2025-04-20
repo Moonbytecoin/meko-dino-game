@@ -32,7 +32,7 @@ const MekoGame = () => {
 
     const generatePlatforms = (startY) => {
       const platforms = [];
-      const spacing = 110;
+      const spacing = 100;
       let y = startY;
       const layoutPatterns = [["solid"], ["moving"], ["solid", "moving"], ["moving", "solid"], ["solid", "solid"], ["moving", "moving"]];
       for (let i = 0; i < 40; i++) {
@@ -42,12 +42,12 @@ const MekoGame = () => {
           const width = 100;
           const height = 12;
           let x;
-          let dx = Math.random() < 0.5 ? 2.2 : 0;
+          let dx = Math.random() < 0.5 ? 2.6 : 0;
           let tries = 0;
           do {
             x = Math.random() * (canvas.width - width);
             tries++;
-          } while (row.some(p => Math.abs(p.x - x) < width + 20) && tries < 10);
+          } while (row.some(p => Math.abs(p.x - x) < width + 30) && tries < 10);
           row.push({ x, y, width, height, dx });
         });
         platforms.push(...row);
@@ -64,8 +64,8 @@ const MekoGame = () => {
         width: 130,
         height: 130,
         velocityY: 0,
-        jumpForce: 18,
-        speed: 4.5,
+        jumpForce: 16,
+        speed: 4,
         growth: 1,
         originalSize: 130,
         lastPlatformY: null,
@@ -119,10 +119,10 @@ const MekoGame = () => {
         meko.y += meko.velocityY;
       }
 
-      if (meko.y < canvas.height / 2) {
-        const diff = canvas.height / 2 - meko.y;
+      if (meko.y < canvas.height * 0.4) {
+        const diff = canvas.height * 0.4 - meko.y;
         state.scrollOffset += diff;
-        meko.y = canvas.height / 2;
+        meko.y = canvas.height * 0.4;
         platforms.forEach(p => (p.y += diff));
         egg.y += diff;
 
@@ -178,13 +178,13 @@ const MekoGame = () => {
         ) {
           egg.collected = true;
           meko.growth += 0.3;
-          meko.jumpForce += 2;
+          meko.jumpForce += 1.5;
           state.score += 10;
           respawnEgg();
           clearTimeout(growthTimer.current);
           growthTimer.current = setTimeout(() => {
             meko.growth = 1;
-            meko.jumpForce = 18;
+            meko.jumpForce = 16;
           }, 10000);
         }
       }
