@@ -1,4 +1,4 @@
-// A vertical jumping version of Meko Game with fixed ultra-tall platform stack
+// A vertical jumping version of Meko Game with improved endless platform generation
 import React, { useEffect, useRef, useState } from "react";
 
 const MekoGame = () => {
@@ -7,9 +7,11 @@ const MekoGame = () => {
   const [started, setStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
+  const [firstJump, setFirstJump] = useState(false);
   const keys = useRef({});
   const gameState = useRef({});
   const growthTimer = useRef(null);
+  const lastPlatformGenY = useRef(0);
 
   useEffect(() => {
     if (!started || gameOver) return;
@@ -28,7 +30,7 @@ const MekoGame = () => {
 
     const gravity = 0.6;
 
-    const generateFullPlatformStack = (startY = 0, minY = -100000) => {
+    const generatePlatforms = (startY = 0) => {
       const platforms = [];
       const spacing = 110;
       let y = startY;
@@ -42,7 +44,7 @@ const MekoGame = () => {
         ["moving", "moving"],
       ];
 
-      while (y > minY) {
+      for (let i = 0; i < 75; i++) {
         const pattern = layoutPatterns[Math.floor(Math.random() * layoutPatterns.length)];
         const rowPlatforms = [];
 
@@ -57,7 +59,7 @@ const MekoGame = () => {
             x = Math.random() * (canvas.width - width);
             tries++;
           } while (
-            rowPlatforms.some((p) => Math.abs(p.x - x) < width + 20) && tries < 10
+            rowPlatforms.some(p => Math.abs(p.x - x) < width + 20) && tries < 10
           );
 
           rowPlatforms.push({ x, y, width, height, dx });
@@ -67,6 +69,7 @@ const MekoGame = () => {
         y -= spacing;
       }
 
+      lastPlatformGenY.current = y;
       return platforms;
     };
 
@@ -92,6 +95,8 @@ const MekoGame = () => {
         collected: false,
       };
 
+      lastPlatformGenY.current = canvas.height - 100;
+
       const basePlatform = {
         x: canvas.width / 2 - 75,
         y: canvas.height - 60,
@@ -103,7 +108,7 @@ const MekoGame = () => {
       gameState.current = {
         meko,
         egg,
-        platforms: [basePlatform, ...generateFullPlatformStack(canvas.height - 120)],
+        platforms: [basePlatform, ...generatePlatforms(canvas.height - 120)],
         score: 0,
         scrollOffset: 0,
       };
@@ -128,11 +133,15 @@ const MekoGame = () => {
       if (gameOver) return;
       const state = gameState.current;
       const { meko, egg, platforms } = state;
+      const platformSpacing = 110;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-      meko.velocityY += gravity;
-      meko.y += meko.velocityY;
+      if (firstJump) {
+        meko.velocityY += gravity;
+        meko.y += meko.velocityY;
+      }
 
       if (meko.y < canvas.height / 2) {
         const diff = canvas.height / 2 - meko.y;
@@ -169,6 +178,7 @@ const MekoGame = () => {
         ctx.fillRect(p.x, p.y, p.width, p.height);
 
         if (
+          firstJump &&
           meko.y + meko.height * meko.growth >= p.y &&
           meko.y + meko.height * meko.growth <= p.y + 15 &&
           meko.x + meko.width * meko.growth > p.x &&
@@ -211,6 +221,9 @@ const MekoGame = () => {
 
     const handleKeyDown = (e) => {
       keys.current[e.code] = true;
+      if (!firstJump && e.code === "Space") {
+        setFirstJump(true);
+      }
     };
     const handleKeyUp = (e) => {
       keys.current[e.code] = false;
@@ -237,7 +250,7 @@ const MekoGame = () => {
       document.removeEventListener("keyup", handleKeyUp);
       clearTimeout(growthTimer.current);
     };
-  }, [started, gameOver]);
+  }, [started, gameOver, firstJump]);
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
@@ -286,6 +299,7 @@ const MekoGame = () => {
           <button
             onClick={() => {
               setGameOver(false);
+              setFirstJump(false);
               setStarted(true);
             }}
           >
