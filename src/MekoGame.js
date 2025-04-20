@@ -32,11 +32,10 @@ const MekoGame = () => {
 
     const generatePlatforms = (startY) => {
       const platforms = [];
-      const spacing = 90;
+      const spacing = 75;
       let y = startY;
       const maxY = startY - 8000;
       const rowWidth = canvas.width - 60;
-      let toggle = false;
       while (y > maxY) {
         const width = 100;
         const height = 12;
@@ -66,7 +65,7 @@ const MekoGame = () => {
         width: 130,
         height: 130,
         velocityY: 0,
-        jumpForce: 16,
+        jumpForce: 18,
         speed: 4,
         growth: 1,
         originalSize: 130,
@@ -186,7 +185,7 @@ const MekoGame = () => {
           clearTimeout(growthTimer.current);
           growthTimer.current = setTimeout(() => {
             meko.growth = 1;
-            meko.jumpForce = 16;
+            meko.jumpForce = 18;
           }, 10000);
         }
       }
